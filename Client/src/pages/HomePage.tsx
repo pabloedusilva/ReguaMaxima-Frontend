@@ -80,7 +80,7 @@ export default function HomePage() {
       {/* Ícone de prancheta no canto superior direito */}
       <button
         onClick={() => navigate('/agendamentos')}
-        className={`fixed top-4 right-4 z-10 w-12 h-12 rounded-xl bg-surface border border-border flex items-center justify-center text-gold hover:bg-[#1f1f1f] hover:border-gold/50 hover:-translate-y-0.5 transition-all shadow-lg ${shake ? 'shake-once' : ''}`}
+        className={`fixed top-4 right-4 z-10 w-12 h-12 rounded-xl bg-surface border border-border flex items-center justify-center text-gold hover:-translate-y-0.5 transition-all shadow-lg ${shake ? 'shake-once' : ''}`}
         aria-label="Ver meus agendamentos"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
