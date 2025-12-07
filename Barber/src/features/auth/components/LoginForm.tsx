@@ -1,15 +1,24 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Input from '@barber/components/ui/Input'
 import Button from '@barber/components/ui/Button'
 
 export default function LoginForm() {
+  const navigate = useNavigate()
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Funcionalidade será implementada com backend futuramente
+    // TODO: Backend integration - Replace with actual authentication API call
+    // For now, any input redirects to dashboard (demo mode)
+    localStorage.setItem('barber_auth_demo', 'true')
+    if (rememberMe) {
+      localStorage.setItem('barber_remember', 'true')
+    }
+    navigate('/dashboard')
   }
 
   return (
@@ -54,7 +63,12 @@ export default function LoginForm() {
 
       <div className="flex items-center justify-between text-sm">
         <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" className="w-4 h-4 rounded border-border bg-[#131313] text-gold focus:ring-2 focus:ring-gold/60" />
+          <input 
+            type="checkbox" 
+            className="w-4 h-4 rounded border-border bg-[#131313] text-gold focus:ring-2 focus:ring-gold/60"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+          />
           <span className="text-text-dim">Lembrar de mim</span>
         </label>
         <a href="#" className="text-gold hover:text-gold-600 transition-colors">

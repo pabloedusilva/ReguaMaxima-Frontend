@@ -1,1 +1,297 @@
-// Resumo (hoje, KPIs, próximos agendamentos)
+import { useEffect, useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+// TODO: Backend Integration - Replace localStorage with API calls
+// GET /api/stats/overview - Dashboard statistics
+// GET /api/bookings?status=scheduled&limit=5 - Upcoming bookings
+
+interface DashboardStats {
+  totalBarbers: number
+  totalClients: number
+  bookingsMonth: number
+  bookingsWeek: number
+  bookingsToday: number
+}
+
+interface Booking {
+  id: string
+  clientName: string
+  clientPhone: string
+  professionalId: string
+  professionalName: string
+  serviceId: string
+  serviceName: string
+  date: string
+  time: string
+  price: number
+  status: 'scheduled' | 'completed' | 'cancelled'
+}
+
+export default function DashboardHome() {
+  const navigate = useNavigate()
+  const [stats, setStats] = useState<DashboardStats>({
+    totalBarbers: 1,
+    totalClients: 0,
+    bookingsMonth: 0,
+    bookingsWeek: 0,
+    bookingsToday: 0
+  })
+  const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [])
+
+  const loadDashboardData = () => {
+    setIsLoading(true)
+    try {
+      // Load bookings from localStorage (temporary - will be replaced with API)
+      const bookingsRaw = localStorage.getItem('userBookings')
+      const allBookings: Booking[] = bookingsRaw ? JSON.parse(bookingsRaw) : []
+
+      // Calculate stats
+      const now = new Date()
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const weekAgo = new Date(today)
+      weekAgo.setDate(weekAgo.getDate() - 7)
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+
+      const scheduledBookings = allBookings.filter(b => b.status === 'scheduled')
+      const uniqueClients = new Set(scheduledBookings.map(b => b.clientPhone))
+
+      const bookingsToday = scheduledBookings.filter(b => {
+        const bookingDate = new Date(b.date)
+        return bookingDate.toDateString() === today.toDateString()
+      }).length
+
+      const bookingsWeek = scheduledBookings.filter(b => {
+        const bookingDate = new Date(b.date)
+        return bookingDate >= weekAgo
+      }).length
+
+      const bookingsMonth = scheduledBookings.filter(b => {
+        const bookingDate = new Date(b.date)
+        return bookingDate >= monthStart
+      }).length
+
+      setStats({
+        totalBarbers: 1, // Hardcoded for demo - will come from API
+        totalClients: uniqueClients.size,
+        bookingsMonth,
+        bookingsWeek,
+        bookingsToday
+      })
+
+      // Get next 5 upcoming bookings
+      const upcoming = scheduledBookings
+        .map(b => ({
+          ...b,
+          dateTime: new Date(`${b.date}T${b.time}`)
+        }))
+        .filter(b => b.dateTime >= now)
+        .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())
+        .slice(0, 5)
+
+      setUpcomingBookings(upcoming)
+    } catch (error) {
+      console.error('Error loading dashboard data:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('pt-BR', { 
+      weekday: 'short', 
+      day: '2-digit', 
+      month: 'short' 
+    })
+  }
+
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString('pt-BR', { 
+      style: 'currency', 
+      currency: 'BRL' 
+    })
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-text-dim">Carregando dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid gap-8">
+      {/* Header */}
+      <div className="animate-fade-in">
+        <h1 className="font-display text-4xl md:text-5xl text-gold mb-2">
+          Dashboard
+        </h1>
+        <p className="text-text-dim">
+          Visão geral da sua barbearia
+        </p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 animate-fade-in-delayed">
+        {/* Total Barbeiros */}
+        <div className="stat-card card-hover group">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-text-dim text-sm mb-1">Barbeiros</p>
+              <p className="text-3xl font-bold text-text">{stats.totalBarbers}</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Total Clientes */}
+        <div className="stat-card card-hover group">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-text-dim text-sm mb-1">Clientes</p>
+              <p className="text-3xl font-bold text-text">{stats.totalClients}</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-400 group-hover:scale-110 transition-transform">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Agendamentos do Mês */}
+        <div className="stat-card card-hover group">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-text-dim text-sm mb-1">Mês</p>
+              <p className="text-3xl font-bold text-text">{stats.bookingsMonth}</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Agendamentos da Semana */}
+        <div className="stat-card card-hover group">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-text-dim text-sm mb-1">Semana</p>
+              <p className="text-3xl font-bold text-text">{stats.bookingsWeek}</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 group-hover:scale-110 transition-transform">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Agendamentos Hoje */}
+        <div className="stat-card card-hover group">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-text-dim text-sm mb-1">Hoje</p>
+              <p className="text-3xl font-bold text-text">{stats.bookingsToday}</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold group-hover:scale-110 transition-transform">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Próximos Agendamentos */}
+      <div className="animate-fade-in-delayed">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold text-text">Próximos agendamentos</h2>
+          <button
+            onClick={() => navigate('/agendamentos')}
+            className="text-gold hover:text-gold-600 text-sm font-semibold flex items-center gap-1 transition-colors"
+          >
+            Ver todos
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+
+        {upcomingBookings.length === 0 ? (
+          <div className="card text-center py-12">
+            <div className="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <p className="text-text-dim">Nenhum agendamento próximo</p>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {upcomingBookings.map((booking, index) => (
+              <div
+                key={booking.id}
+                className="card card-hover flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer"
+                onClick={() => navigate(`/agendamentos/${booking.id}`)}
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="flex items-start gap-4 flex-1">
+                  <div className="w-12 h-12 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-text font-semibold mb-1">{booking.clientName}</h3>
+                    <p className="text-text-dim text-sm mb-2">{booking.serviceName}</p>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-text-dim">
+                      <span className="flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {formatDate(booking.date)}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {booking.time}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        {booking.professionalName}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 sm:flex-col sm:items-end">
+                  <span className="text-lg font-bold text-gold">{formatCurrency(booking.price)}</span>
+                  <span className="badge badge-scheduled">Agendado</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+

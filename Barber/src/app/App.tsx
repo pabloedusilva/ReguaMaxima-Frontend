@@ -1,5 +1,6 @@
-import Login from '@barber/pages/auth/Login'
+import { RouterProvider } from 'react-router-dom'
+import { router } from './routes'
 
 export default function App() {
-  return <Login />
+  return <RouterProvider router={router} />
 }
