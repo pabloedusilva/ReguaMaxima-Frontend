@@ -41,6 +41,10 @@ export default function DashboardHome() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    document.title = 'Régua Máxima | Dashboard Admin'
+  }, [])
+
+  useEffect(() => {
     loadDashboardData()
   }, [])
 
