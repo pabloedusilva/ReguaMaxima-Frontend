@@ -26,7 +26,7 @@ export default function NextBookingHighlight({ booking }: NextBookingHighlightPr
   })
 
   return (
-    <div className="card border-gold/30 bg-gradient-to-br from-gold/5 to-transparent">
+    <div className="card border-gold/50 bg-gradient-to-br from-gold/10 to-transparent shadow-lg shadow-gold/5">
       <div className="grid gap-3">
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-gold animate-pulse" />
@@ -34,16 +34,15 @@ export default function NextBookingHighlight({ booking }: NextBookingHighlightPr
         </div>
         
         <div className="grid gap-2">
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl md:text-3xl font-display text-text">{booking.time}</span>
+          <div className="grid gap-1">
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl md:text-4xl font-display text-text font-bold">{booking.time}</span>
+              <span className="text-3xl md:text-4xl font-display text-text font-bold">{booking.clientName}</span>
+            </div>
             <span className="text-text-dim text-sm capitalize">{formattedDate}</span>
           </div>
           
           <div className="grid gap-1 text-sm">
-            <div className="flex justify-between">
-              <span className="text-text-dim">Cliente:</span>
-              <span className="text-text font-medium">{booking.clientName}</span>
-            </div>
             <div className="flex justify-between">
               <span className="text-text-dim">Profissional:</span>
               <span className="text-text font-medium">{booking.professionalName}</span>

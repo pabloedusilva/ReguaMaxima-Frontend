@@ -88,17 +88,20 @@ export default function DashboardHome() {
         bookingsToday
       })
 
-      // Get next 3 upcoming bookings
-      const upcoming = scheduledBookings
+      // Get today's bookings (up to 4)
+      const todayBookings = scheduledBookings
         .map(b => ({
           ...b,
           dateTime: new Date(`${b.date}T${b.time}`)
         }))
-        .filter(b => b.dateTime >= now)
+        .filter(b => {
+          const bookingDate = new Date(b.date)
+          return bookingDate.toDateString() === today.toDateString() && b.dateTime >= now
+        })
         .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())
-        .slice(0, 3)
+        .slice(0, 4)
 
-      setUpcomingBookings(upcoming)
+      setUpcomingBookings(todayBookings)
     } catch (error) {
       console.error('Error loading dashboard data:', error)
     } finally {
@@ -223,10 +226,10 @@ export default function DashboardHome() {
         </div>
       </div>
 
-      {/* Próximos Agendamentos */}
+      {/* Agendamentos de Hoje */}
       <div className="animate-fade-in-delayed">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-text">Próximos agendamentos</h2>
+          <h2 className="text-2xl font-semibold text-text">Agendamentos de Hoje</h2>
           <button
             onClick={() => navigate('/admin/agendamentos')}
             className="text-gold hover:text-gold-600 text-sm font-semibold flex items-center gap-1 transition-colors"
@@ -245,14 +248,14 @@ export default function DashboardHome() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <p className="text-text-dim">Nenhum agendamento próximo</p>
+            <p className="text-text-dim">Nenhum agendamento para hoje</p>
           </div>
         ) : (
           <div className="grid gap-4">
             {/* Próximo Agendamento em Destaque */}
             <NextBookingHighlight booking={upcomingBookings[0]} />
 
-            {/* Próximos Agendamentos (2º e 3º) - Estilo Cliente */}
+            {/* Demais Agendamentos de Hoje - Estilo Cliente */}
             {upcomingBookings.slice(1).map((booking, index) => {
               const dateObj = new Date(booking.date + 'T' + booking.time)
               const formattedDate = dateObj.toLocaleDateString('pt-BR', { 
@@ -264,14 +267,14 @@ export default function DashboardHome() {
               return (
                 <div
                   key={booking.id}
-                  className="card hover:border-gold/30 transition"
+                  className="bg-[#141414] border border-border rounded-2xl shadow-[var(--shadow)] p-5 transition hover:border-gold/30"
                   style={{ animationDelay: `${(index + 1) * 0.1}s` }}
                 >
                   <div className="grid gap-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="text-lg font-semibold text-text">{booking.time}</div>
-                        <div className="text-sm text-text-dim capitalize">{formattedDate}</div>
+                        <div className="text-sm text-text/70 capitalize">{formattedDate}</div>
                       </div>
                       <span className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-blue-400/15 border-blue-400/30 text-blue-400">
                         Agendado
@@ -280,29 +283,39 @@ export default function DashboardHome() {
 
                     <div className="grid gap-1.5 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-text-dim">Cliente:</span>
+                        <span className="text-text/70">Cliente:</span>
                         <span className="text-text font-medium">{booking.clientName}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-text-dim">Profissional:</span>
+                        <span className="text-text/70">Telefone:</span>
+                        <span className="text-text font-medium">{booking.clientPhone}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-text/70">Profissional:</span>
                         <span className="text-text font-medium">{booking.professionalName}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-text-dim">Serviço:</span>
+                        <span className="text-text/70">Serviço:</span>
                         <span className="text-text font-medium">{booking.serviceName}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-text-dim">Valor:</span>
-                        <span className="text-gold font-semibold">{formatCurrency(booking.price)}</span>
+                        <span className="text-text/70">Valor:</span>
+                        <span className="text-gold font-semibold">R$ {booking.price.toFixed(2)}</span>
                       </div>
                     </div>
 
                     <div className="pt-2 border-t border-border grid gap-2">
                       <button
                         onClick={() => navigate(`/admin/agendamentos/${booking.id}`)}
-                        className="w-full px-4 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 hover:border-gold transition-colors text-sm font-medium"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full font-semibold border bg-transparent text-text border-border transition hover:-translate-y-px w-full"
                       >
                         Ver detalhes
+                      </button>
+                      <button
+                        onClick={() => {/* TODO: Add cancel handler */}}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full font-semibold border bg-transparent border-red-400/30 text-red-400 hover:bg-red-400/10 hover:border-red-400 transition hover:-translate-y-px w-full"
+                      >
+                        Cancelar agendamento
                       </button>
                     </div>
                   </div>

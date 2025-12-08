@@ -335,8 +335,8 @@ export default function BookingsList() {
                     <div
                       key={booking.id}
                       className={`bg-[#141414] border rounded-2xl shadow-[var(--shadow)] p-5 transition ${
-                        isNextBooking ? 'border-gold/30' : 'border-border'
-                      } hover:border-gold/30`}
+                        isNextBooking ? 'border-gold/50' : 'border-border hover:border-gold/30'
+                      }`}
                     >
                       <div className="grid gap-3">
                         <div className="flex items-start justify-between gap-3">
