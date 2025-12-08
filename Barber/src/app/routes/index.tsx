@@ -15,6 +15,7 @@ import ServicesList from '@barber/pages/services/ListServices'
 import ProfessionalsList from '@barber/pages/settings/Staff'
 import WorkingHoursSettings from '@barber/pages/settings/WorkingHours'
 import BarbershopSettings from '@barber/pages/settings/Profile'
+import StickersGallery from '@barber/pages/settings/StickersGallery'
 
 export const router = createBrowserRouter([
   {
@@ -99,6 +100,16 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <BarbershopSettings />
+          }
+        ]
+      },
+      {
+        path: 'figurinhas',
+        element: <DashboardLayout />,
+        children: [
+          {
+            index: true,
+            element: <StickersGallery />
           }
         ]
       },
