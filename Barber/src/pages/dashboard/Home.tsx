@@ -39,6 +39,7 @@ export default function DashboardHome() {
   })
   const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [bookingToCancel, setBookingToCancel] = useState<string | null>(null)
 
   useEffect(() => {
     document.title = 'Régua Máxima | Dashboard Admin'
@@ -106,6 +107,27 @@ export default function DashboardHome() {
       console.error('Error loading dashboard data:', error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleCancelBooking = (bookingId: string) => {
+    setBookingToCancel(bookingId)
+  }
+
+  const confirmCancelBooking = () => {
+    if (!bookingToCancel) return
+
+    try {
+      const bookingsRaw = localStorage.getItem('userBookings')
+      const allBookings: Booking[] = bookingsRaw ? JSON.parse(bookingsRaw) : []
+      const updated = allBookings.map(b =>
+        b.id === bookingToCancel ? { ...b, status: 'cancelled' as const } : b
+      )
+      localStorage.setItem('userBookings', JSON.stringify(updated))
+      setBookingToCancel(null)
+      loadDashboardData() // Reload data to update the view
+    } catch (error) {
+      console.error('Error cancelling booking:', error)
     }
   }
 
@@ -312,7 +334,7 @@ export default function DashboardHome() {
                         Ver detalhes
                       </button>
                       <button
-                        onClick={() => {/* TODO: Add cancel handler */}}
+                        onClick={() => handleCancelBooking(booking.id)}
                         className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full font-semibold border bg-transparent border-red-400/30 text-red-400 hover:bg-red-400/10 hover:border-red-400 transition hover:-translate-y-px w-full"
                       >
                         Cancelar agendamento
@@ -325,6 +347,32 @@ export default function DashboardHome() {
           </div>
         )}
       </div>
+
+      {/* Cancel Confirmation Modal */}
+      {bookingToCancel && (
+        <div className="modal-overlay" onClick={() => setBookingToCancel(null)}>
+          <div className="modal-content p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-semibold text-text mb-4">Cancelar Agendamento</h3>
+            <p className="text-text-dim mb-6">
+              Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setBookingToCancel(null)}
+                className="btn btn-outline flex-1"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={confirmCancelBooking}
+                className="btn btn-danger flex-1"
+              >
+                Cancelar Agendamento
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

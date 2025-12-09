@@ -176,8 +176,26 @@ export default function BookingPage() {
   const confirmBooking = () => {
     // TODO: Replace with actual API call when backend is ready
     // Save booking to localStorage temporarily
+    
+    // Generate booking ID in format agd_YYYYMMDD_XXX
+    const dateObj = new Date(state.date || '')
+    const year = dateObj.getFullYear()
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0')
+    const day = String(dateObj.getDate()).padStart(2, '0')
+    const dateStr = `${year}${month}${day}`
+    
+    const existingBookings = JSON.parse(localStorage.getItem('userBookings') || '[]')
+    const bookingsForDate = existingBookings.filter((b: any) => {
+      const bookingDate = new Date(b.date)
+      const bookingDateStr = `${bookingDate.getFullYear()}${String(bookingDate.getMonth() + 1).padStart(2, '0')}${String(bookingDate.getDate()).padStart(2, '0')}`
+      return bookingDateStr === dateStr
+    })
+    
+    const sequence = String(bookingsForDate.length + 1).padStart(3, '0')
+    const bookingId = `agd_${dateStr}_${sequence}`
+    
     const newBooking = {
-      id: `bk_${Date.now()}`,
+      id: bookingId,
       professionalName: state.professional?.name || '',
       serviceName: services.find(s => s.id === state.serviceId)?.name || '',
       date: state.date || '',
@@ -189,7 +207,6 @@ export default function BookingPage() {
       createdAt: new Date().toISOString()
     }
     
-    const existingBookings = JSON.parse(localStorage.getItem('userBookings') || '[]')
     localStorage.setItem('userBookings', JSON.stringify([newBooking, ...existingBookings]))
     
     setSuccess(true)
