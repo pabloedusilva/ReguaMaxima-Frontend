@@ -43,7 +43,7 @@ export default function PromotionsList() {
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
-    document.title = 'Régua Máxima | Promoções';
+    document.title = 'Régua Máxima | Dashboard Barbeiro';
     loadPromotions();
   }, []);
 
