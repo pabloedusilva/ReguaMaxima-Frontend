@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import Footer from '@barber/components/layout/Footer'
 
 export default function DashboardLayout() {
   const navigate = useNavigate()
@@ -274,9 +275,12 @@ export default function DashboardLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="p-4 md:p-6 lg:p-8 pb-24 lg:pb-8">
+        <main className="p-4 md:p-6 lg:p-8 pb-28 lg:pb-20">
           <Outlet />
         </main>
+
+        {/* Footer */}
+        <Footer />
       </div>
     </div>
   )
