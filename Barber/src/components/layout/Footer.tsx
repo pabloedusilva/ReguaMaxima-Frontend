@@ -16,8 +16,9 @@ export default function Footer() {
     return 'Barbearia';
   };
 
+  // iOS PWA: evitar position:fixed no rodapé (conflita com scroll/touch e a bottom navbar).
   return (
-    <footer className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-[#0a0a0a]/95 backdrop-blur-sm">
+    <footer className="border-t border-border bg-[#0a0a0a]/95 backdrop-blur-sm">
       <div className="px-4 py-4 md:py-3">
         <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-xs">
           {/* Nome do App */}

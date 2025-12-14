@@ -23,39 +23,36 @@
     height: 100%; 
     width: 100%;
     overflow-x: hidden;
-    /* Prevenir zoom no iOS */
-    touch-action: manipulation;
+    /* iOS PWA: evita que o BODY role (somente um container interno deve rolar). */
+    overflow-y: hidden;
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
   }
   
   body { 
     @apply bg-gradient-to-b from-bg to-bg-soft text-text font-sans antialiased;
-    /* Prevenir pull-to-refresh no mobile */
+    /* iOS PWA: não usar position:fixed no body (piora touch/scroll com elementos fixos). */
+    position: relative;
     overscroll-behavior-y: contain;
-    -webkit-overflow-scrolling: touch;
-    position: fixed;
-    width: 100%;
   }
   
   #root {
-    height: 100vh;
-    height: 100dvh;
+    /* iOS PWA: o #root NÃO deve scrollar; o scroll fica no container principal (ex.: <main data-app-scroll>). */
+    height: 100%;
+    min-height: 100dvh;
     width: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
   }
   
   a { @apply text-text no-underline; }
   
-  /* iOS Safe Area Support - Suporte para notch/dynamic island */
+  /* iOS Safe Area: expõe insets via variáveis para usar onde faz sentido (header/nav), sem deslocar o layout inteiro. */
   @supports (padding: env(safe-area-inset-top)) {
-    body {
-      padding-top: env(safe-area-inset-top);
-      padding-left: env(safe-area-inset-left);
-      padding-right: env(safe-area-inset-right);
-      padding-bottom: env(safe-area-inset-bottom);
+    :root {
+      --safe-top: env(safe-area-inset-top);
+      --safe-right: env(safe-area-inset-right);
+      --safe-bottom: env(safe-area-inset-bottom);
+      --safe-left: env(safe-area-inset-left);
     }
   }
   
@@ -71,6 +68,30 @@
       user-select: text;
       -webkit-user-select: text;
     }
+  }
+}
+
+@layer utilities {
+  /* iOS: toque mais responsivo em elementos clicáveis (sem bloquear pan-y). */
+  a, button, [role='button'] {
+    touch-action: manipulation;
+  }
+
+  /* Utilities de safe-area para usar com Tailwind (classes simples). */
+  .pt-safe { padding-top: max(var(--safe-top, 0px), 0px); }
+  /* iOS: mantém uma folga mínima + safe-area para a navbar inferior. */
+  .pb-safe { padding-bottom: max(0.5rem, var(--safe-bottom, 0px)); }
+  .pl-safe { padding-left: max(var(--safe-left, 0px), 0px); }
+  .pr-safe { padding-right: max(var(--safe-right, 0px), 0px); }
+
+  /* Container único de scroll (iOS-friendly). */
+  .scroll-container {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    /* Permite scroll vertical nativo; evita conflito com gestos. */
+    touch-action: pan-y;
   }
 }
 
@@ -147,11 +168,6 @@
 
 /* Mobile Bottom Navigation - Modern & Minimalist */
 @media (max-width: 1023px) {
-  /* iOS Safe Area Padding */
-  .pb-safe {
-    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
-  }
-  
   /* Smooth tap feedback */
   nav a {
     -webkit-tap-highlight-color: transparent;
@@ -308,20 +324,9 @@
   height: calc(var(--vh, 1vh) * 100);
 }
 
-/* iOS Standalone - Remove bounce effect */
+/* iOS Standalone: não aplicar scroll no #root (o scroll é do .scroll-container). */
 .ios-standalone body {
-  position: fixed;
   overflow: hidden;
-}
-
-.ios-standalone #root {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* Android Standalone - Melhorias específicas */

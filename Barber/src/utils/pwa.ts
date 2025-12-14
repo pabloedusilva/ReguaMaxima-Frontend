@@ -20,53 +20,19 @@ export const isStandalone = (): boolean => {
  * Previne comportamentos indesejados do navegador mobile
  */
 export const preventMobileBehaviors = () => {
-  // Prevenir pull-to-refresh no mobile
-  let lastTouchY = 0;
-  let preventPullToRefresh = false;
-
-  document.addEventListener('touchstart', (e) => {
-    if (e.touches.length !== 1) return;
-    lastTouchY = e.touches[0].clientY;
-    preventPullToRefresh = window.scrollY === 0;
-  }, { passive: false });
-
-  document.addEventListener('touchmove', (e) => {
-    const touchY = e.touches[0].clientY;
-    const touchYDelta = touchY - lastTouchY;
-    lastTouchY = touchY;
-
-    if (preventPullToRefresh) {
-      // Para prevenir pull to refresh
-      preventPullToRefresh = false;
-      if (touchYDelta > 0) {
-        e.preventDefault();
-        return;
-      }
+  // iOS (Safari/PWA): NUNCA usar document-level touchmove preventDefault.
+  // Isso quebra scroll/swipe e causa "toque não responde" em containers com overflow.
+  // A estratégia correta fica no CSS + um único container interno de scroll.
+  if (isIOS()) {
+    // Em modo standalone, ainda bloqueamos pinch-zoom para manter experiência "app-like".
+    if (isStandalone()) {
+      const prevent = (e: Event) => e.preventDefault();
+      document.addEventListener('gesturestart', prevent, { passive: false });
+      document.addEventListener('gesturechange', prevent, { passive: false });
+      document.addEventListener('gestureend', prevent, { passive: false });
     }
-  }, { passive: false });
-
-  // Prevenir zoom em double-tap
-  let lastTouchEnd = 0;
-  document.addEventListener('touchend', (e) => {
-    const now = Date.now();
-    if (now - lastTouchEnd <= 300) {
-      e.preventDefault();
-    }
-    lastTouchEnd = now;
-  }, false);
-
-  // Prevenir zoom com gestos (pinch)
-  document.addEventListener('gesturestart', (e) => {
-    e.preventDefault();
-  });
-
-  document.addEventListener('gesturechange', (e) => {
-    e.preventDefault();
-  });
-
-  document.addEventListener('gestureend', (e) => {
-    e.preventDefault();
-  });
+    return;
+  }
 };
 
 /**

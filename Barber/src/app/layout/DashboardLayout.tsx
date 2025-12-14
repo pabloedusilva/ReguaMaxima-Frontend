@@ -139,8 +139,9 @@ export default function DashboardLayout() {
     }
   ]
 
+  // iOS PWA: BODY/#root não rolam; apenas o <main data-app-scroll> é o container de scroll.
   return (
-    <div className="min-h-screen bg-gradient-to-b from-bg to-bg-soft">
+    <div className="h-[100dvh] bg-gradient-to-b from-bg to-bg-soft overflow-hidden">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex fixed top-0 left-0 h-full w-64 bg-[#0a0a0a] border-r border-border z-50">
         <div className="flex flex-col h-full w-full">
@@ -197,49 +198,10 @@ export default function DashboardLayout() {
         </div>
       </aside>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
-        <div className="relative bg-black/95 backdrop-blur-xl">
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent"></div>
-          
-          <div className="overflow-x-auto scrollbar-hide">
-            <div className="flex items-center gap-1 px-4 py-4 pb-safe min-w-max">
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className="flex-1 min-w-[75px]"
-                >
-                  {({ isActive }) => (
-                    <div className="relative">
-                      {isActive && (
-                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-gold rounded-full"></div>
-                      )}
-                      <div className="flex flex-col items-center gap-2 py-2.5">
-                        <div className={`transition-all duration-300 text-xl ${
-                          isActive ? 'text-gold scale-110' : 'text-text-dim'
-                        }`}>
-                          {item.icon}
-                        </div>
-                        <span className={`text-[9px] font-semibold tracking-tight transition-colors duration-300 ${
-                          isActive ? 'text-gold' : 'text-text-dim/70'
-                        }`}>
-                          {item.label}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </NavLink>
-              ))}
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <div className="lg:ml-64">
+      {/* Main Column */}
+      <div className="lg:ml-64 flex h-full flex-col">
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 bg-[#0a0a0a]/80 backdrop-blur-lg border-b border-border">
+        <header className="flex-none z-30 bg-[#0a0a0a]/80 backdrop-blur-lg border-b border-border pt-safe">
           <div className="flex items-center justify-between px-4 md:px-6 py-4">
             {/* Logo for Mobile (fixed to assets logo) */}
             <div className="flex items-center gap-3 lg:hidden">
@@ -323,13 +285,54 @@ export default function DashboardLayout() {
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="p-4 md:p-6 lg:p-8 pb-28 lg:pb-20">
+        {/* Page Content (única área rolável) */}
+        <main data-app-scroll className="scroll-container flex-1 p-4 md:p-6 lg:p-8">
           <Outlet />
         </main>
 
-        {/* Footer */}
-        <Footer />
+        {/* Mobile Bottom Navigation (sem position:fixed; evita bugs de touch/scroll no iOS) */}
+        <nav className="lg:hidden flex-none z-50 bottom-nav">
+          <div className="relative bg-black/95 backdrop-blur-xl">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent"></div>
+            
+            <div className="overflow-x-auto scrollbar-hide">
+              <div className="flex items-center gap-1 px-4 py-4 pb-safe min-w-max">
+                {navItems.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className="flex-1 min-w-[75px]"
+                  >
+                    {({ isActive }) => (
+                      <div className="relative">
+                        {isActive && (
+                          <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-gold rounded-full"></div>
+                        )}
+                        <div className="flex flex-col items-center gap-2 py-2.5">
+                          <div className={`transition-all duration-300 text-xl ${
+                            isActive ? 'text-gold scale-110' : 'text-text-dim'
+                          }`}>
+                            {item.icon}
+                          </div>
+                          <span className={`text-[9px] font-semibold tracking-tight transition-colors duration-300 ${
+                            isActive ? 'text-gold' : 'text-text-dim/70'
+                          }`}>
+                            {item.label}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        {/* Footer (desktop only) */}
+        <div className="hidden lg:block flex-none">
+          <Footer />
+        </div>
 
         {/* PWA Install Modal */}
         <InstallPWAModal
