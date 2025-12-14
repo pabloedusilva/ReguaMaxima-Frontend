@@ -137,6 +137,42 @@ export default function StickersGallery() {
 
   const handleCopySticker = async (stickerPath: string, e: React.MouseEvent) => {
     e.stopPropagation()
+    
+    // Detecta iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    
+    // No iOS, usa o método de compartilhamento nativo
+    if (isIOS && navigator.share) {
+      try {
+        const response = await fetch(stickerPath)
+        const blob = await response.blob()
+        
+        // Cria um File object a partir do blob
+        const fileName = stickerPath.split('/').pop() || 'figurinha.png'
+        const file = new File([blob], fileName, { type: blob.type })
+        
+        // Usa a Web Share API nativa do iOS
+        await navigator.share({
+          files: [file],
+          title: 'Figurinha - Régua Máxima'
+        })
+        
+        setCopiedSticker(stickerPath)
+        setTimeout(() => {
+          setCopiedSticker(null)
+          setSelectedSticker(null)
+        }, 2000)
+        return
+      } catch (error: any) {
+        // Se o usuário cancelar o compartilhamento, não mostra erro
+        if (error.name === 'AbortError') {
+          return
+        }
+        console.error('Erro ao compartilhar no iOS:', error)
+      }
+    }
+    
+    // Para outros dispositivos, usa Clipboard API
     try {
       // Fetch the image as blob
       const response = await fetch(stickerPath)
@@ -222,13 +258,18 @@ export default function StickersGallery() {
   const currentCategory = STICKER_CATEGORIES[selectedCategory]
   const displayStickers = selectedCategory === 'favoritos' ? favorites : currentCategory.files
   const hasStickers = displayStickers.length > 0
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
 
   return (
     <div className="grid gap-8">
       {/* Header */}
       <div className="animate-fade-in">
         <h1 className="font-display text-4xl md:text-5xl text-gold mb-2">Galeria de Figurinhas</h1>
-        <p className="text-text-dim">Clique na estrela para favoritar, clique na figurinha para copiar</p>
+        <p className="text-text-dim">
+          {isIOS 
+            ? 'Clique na estrela para favoritar, clique na figurinha para compartilhar'
+            : 'Clique na estrela para favoritar, clique na figurinha para copiar'}
+        </p>
       </div>
 
       {/* Category Tabs */}
@@ -322,7 +363,7 @@ export default function StickersGallery() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
-                        <span className="text-sm font-medium text-green-500">Copiado!</span>
+                        <span className="text-sm font-medium text-green-500">{isIOS ? 'Compartilhado!' : 'Copiado!'}</span>
                       </div>
                     ) : selectedSticker === sticker ? (
                       <button
@@ -330,11 +371,17 @@ export default function StickersGallery() {
                         className="flex flex-col items-center gap-2 hover:scale-110 transition-transform"
                       >
                         <div className="w-12 h-12 rounded-full bg-gold/20 border-2 border-gold flex items-center justify-center">
-                          <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
+                          {isIOS ? (
+                            <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                          )}
                         </div>
-                        <span className="text-sm font-medium text-gold">Copiar</span>
+                        <span className="text-sm font-medium text-gold">{isIOS ? 'Compartilhar' : 'Copiar'}</span>
                       </button>
                     ) : null}
                   </div>
