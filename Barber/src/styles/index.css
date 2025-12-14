@@ -319,8 +319,8 @@
    PWA Specific Styles - Mobile Native Experience
    ============================================ */
 
-/* Usa variável CSS customizada para altura de viewport */
-.pwa-standalone #root {
+/* Usa --vh apenas onde ainda faz diferença (Android). No iOS isso pode criar “gap” no fundo. */
+.android-standalone #root {
   height: calc(var(--vh, 1vh) * 100);
 }
 
