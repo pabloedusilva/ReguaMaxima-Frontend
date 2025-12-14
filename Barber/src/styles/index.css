@@ -354,7 +354,8 @@
 /* Tab bar inferior - considera safe area */
 .pwa-standalone .bottom-nav,
 .pwa-standalone .tab-bar {
-  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+  /* iOS: não aplicar padding no container externo (pode gerar "gap" visível). Safe-area já é aplicada via .pb-safe no conteúdo. */
+  padding-bottom: 0;
 }
 
 /* Esconde elementos que não fazem sentido em PWA */
