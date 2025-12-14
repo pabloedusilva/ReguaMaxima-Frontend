@@ -66,6 +66,21 @@ export default function InstallPWAModal({ isOpen, onClose, onInstall, canInstall
     }
   };
 
+  const handleIOSInstall = () => {
+    // No iOS Safari, não é possível abrir programaticamente o menu de compartilhar.
+    // Mas podemos tentar usar a Share API se disponível
+    if (isIOS() && navigator.share) {
+      navigator.share({
+        title: 'Régua Máxima',
+        text: 'Instale o app Régua Máxima na sua tela inicial',
+        url: window.location.href,
+      }).catch(() => {
+        // Se falhar, apenas mostra as instruções (que já estão visíveis no modal)
+        console.log('[PWA] Share API não suportado ou cancelado pelo usuário');
+      });
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -163,7 +178,15 @@ export default function InstallPWAModal({ isOpen, onClose, onInstall, canInstall
             {/* Botão de instalação */}
             <div className="flex flex-col gap-3">
               <button
-                onClick={canInstall ? onInstall : onClose}
+                onClick={() => {
+                  if (canInstall) {
+                    onInstall();
+                  } else if (isIOS()) {
+                    handleIOSInstall();
+                  } else {
+                    onClose();
+                  }
+                }}
                 className="btn btn-primary w-full py-4 text-base font-semibold flex items-center justify-center gap-2"
               >
                 {canInstall ? (
